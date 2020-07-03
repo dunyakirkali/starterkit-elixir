@@ -1,0 +1,5 @@
+#!/bin/sh
+
+_args="$@"
+
+bin/app eval "ExampleApp.hello(\"$_args\")"
