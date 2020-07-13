@@ -3,14 +3,27 @@ defmodule ExampleApp do
     Application.ensure_all_started(:inets)
     Application.ensure_all_started(:ssl)
 
-    [server_url, player_key] = args |> String.split(" ")
+    try do
+      [server_url, player_key] = args |> String.split(" ")
 
-    IO.inspect(server_url, label: "server_url")
-    IO.inspect(player_key, label: "player_key")
+      IO.puts("ServerUrl: #{server_url}; PlayerKey: #{player_key}")
 
-    {:ok, {{_, 200, 'OK'}, _headers, body}} =
-      :httpc.request(:get, {"#{server_url}?playerKey=#{player_key}" |> to_charlist, []}, [], [])
+      {:ok, {{_, status_code, _}, _headers, body}} =
+        :httpc.request(:post, {server_url |> to_charlist, [], [], player_key}, [], [])
 
-    IO.inspect(body)
+      if status_code != 200 do
+        IO.puts("Unexpected server response:")
+        IO.puts("HTTP code: #{status_code}")
+        IO.puts("Response body: #{body}")
+        System.halt(2)
+      end
+
+      IO.puts("Server response: #{body}")
+    rescue
+      e ->
+        IO.puts("Unexpected server response:")
+        IO.puts(Exception.format(:error, e, __STACKTRACE__))
+        System.halt(1)
+    end
   end
 end
